@@ -44,9 +44,8 @@ class MysqlSession
     # outside this class
     def find_session(session_id)
       connection = session_connection
-      #connection.query_with_result = true
       session_id = connection.escape(session_id)
-      result = connection.query("SELECT id, data FROM sessions WHERE `session_id`='#{session_id}' LIMIT 1") #, :cache_rows => false)
+      result = connection.query("SELECT id, data FROM sessions WHERE `session_id`='#{session_id}' LIMIT 1")
       my_session = nil
       # each is used below, as other methods barf on my 64bit linux machine
       # I suspect this to be a bug in mysql-ruby
@@ -54,7 +53,6 @@ class MysqlSession
         my_session = new(session_id, row[1])
         my_session.id = row[0]
       end
-      #result.free
       my_session
     end
 
@@ -65,7 +63,7 @@ class MysqlSession
       session_id = connection.escape(session_id)
       new_session = new(session_id, data)
       if @@eager_session_creation
-        connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{session_id}', '#{connection.escape(data)}')") #, :cache_rows => false)
+        connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{session_id}', '#{connection.escape(data)}')")
         new_session.id = connection.last_id
       end
       new_session
