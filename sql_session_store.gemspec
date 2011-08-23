@@ -33,5 +33,6 @@ Gem::Specification.new do |s|
     lib/sqlite_session.rb
   ]
 
+  s.require_paths = ["lib"]
   s.test_files = %w[]
 end
