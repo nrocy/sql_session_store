@@ -15,15 +15,14 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ["README"]
 
   # run git ls-files to get an updated list
+
   s.files = %w[
     LICENSE
     README
-    sql_session_store.gemspec
     Rakefile
     generators/sql_session_store/USAGE
     generators/sql_session_store/sql_session_store_generator.rb
     generators/sql_session_store/templates/migration.rb
-    init.rb
     install.rb
     lib/mysql_session.rb
     lib/oracle_session.rb
@@ -31,6 +30,8 @@ Gem::Specification.new do |s|
     lib/sql_session.rb
     lib/sql_session_store.rb
     lib/sqlite_session.rb
+    rails/init.rb
+    sql_session_store.gemspec
   ]
 
   s.require_paths = ["lib"]
