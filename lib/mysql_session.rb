@@ -1,7 +1,8 @@
-require 'mysql'
+
+require 'mysql2'
 
 # allow access to the real Mysql connection
-class ActiveRecord::ConnectionAdapters::MysqlAdapter
+class ActiveRecord::ConnectionAdapters::Mysql2Adapter
   attr_reader :connection
 end
 
@@ -43,9 +44,9 @@ class MysqlSession
     # outside this class
     def find_session(session_id)
       connection = session_connection
-      connection.query_with_result = true
-      session_id = Mysql::quote(session_id)
-      result = connection.query("SELECT id, data FROM sessions WHERE `session_id`='#{session_id}' LIMIT 1")
+      #connection.query_with_result = true
+      session_id = connection.escape(session_id)
+      result = connection.query("SELECT id, data FROM sessions WHERE `session_id`='#{session_id}' LIMIT 1") #, :cache_rows => false)
       my_session = nil
       # each is used below, as other methods barf on my 64bit linux machine
       # I suspect this to be a bug in mysql-ruby
@@ -53,19 +54,19 @@ class MysqlSession
         my_session = new(session_id, row[1])
         my_session.id = row[0]
       end
-      result.free
+      #result.free
       my_session
     end
 
     # create a new session with given +session_id+ and +data+
     # and save it immediately to the database
     def create_session(session_id, data)
-      session_id = Mysql::quote(session_id)
+      connection = session_connection
+      session_id = connection.escape(session_id)
       new_session = new(session_id, data)
       if @@eager_session_creation
-        connection = session_connection
-        connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{session_id}', '#{Mysql::quote(data)}')")
-        new_session.id = connection.insert_id
+        connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{session_id}', '#{connection.escape(data)}')") #, :cache_rows => false)
+        new_session.id = connection.last_id
       end
       new_session
     end
@@ -90,12 +91,12 @@ class MysqlSession
     if @id
       # if @id is not nil, this is a session already stored in the database
       # update the relevant field using @id as key
-      connection.query("UPDATE sessions SET `updated_at`=NOW(), `data`='#{Mysql::quote(data)}' WHERE id=#{@id}")
+      connection.query("UPDATE sessions SET `updated_at`=NOW(), `data`='#{connection.escape(data)}' WHERE id=#{@id}")
     else
       # if @id is nil, we need to create a new session in the database
       # and set @id to the primary key of the inserted record
-      connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{@session_id}', '#{Mysql::quote(data)}')")
-      @id = connection.insert_id
+      connection.query("INSERT INTO sessions (`created_at`, `updated_at`, `session_id`, `data`) VALUES (NOW(), NOW(), '#{@session_id}', '#{connection.escape(data)}')")
+      @id = connection.last_id
     end
   end
 
